@@ -2115,4 +2115,196 @@
                             ${(!p.expired) ? `<div class="plan-row"><span>خدمتك المتوقعة عند هذا السن</span><b>${LawEngine.formatYM(p.projectedService)}</b></div>` : ''}
                             ${statusHtml}${extraHtml}
                         </div>
-              
+                    </div>`;
+                }).join('');
+
+                document.getElementById('results').classList.add('show');
+                document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            // ---- زر الحساب ----
+            document.getElementById('calcBtn').onclick = () => {
+                if (!validateForm()) return;
+                const birthDate = new Date(+dYear.value, +dMonth.value - 1, +dDay.value);
+                const today = new Date();
+                const usesEnteredService = (path === 'yes') || (path === 'no' && needsServiceForNo && svcInput.value !== '');
+                const currentServiceMonths = usesEnteredService ? +svcInput.value : 0;
+                const result = LawEngine.evaluate({ birthDate, gender, currentServiceMonths, today });
+                renderResults(result, usesEnteredService);
+            };
+
+        })();
+    </script>
+
+<script>
+/* تحسينات التفاعل (خفيفة) */
+(function () {
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var bar = document.createElement('div'); bar.id = 'scrollBar'; document.body.appendChild(bar);
+    var ticking = false;
+    addEventListener('scroll', function () {
+        if (ticking) return; ticking = true;
+        requestAnimationFrame(function () {
+            var h = document.documentElement.scrollHeight - innerHeight;
+            bar.style.width = (h > 0 ? scrollY / h * 100 : 0) + '%'; ticking = false;
+        });
+    }, { passive: true });
+
+    function buzz(ms) { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} }
+
+    document.addEventListener('click', function (e) {
+        var b = e.target.closest && e.target.closest('.btn-primary, .gate-btn'); if (!b || reduce) return;
+        var r = b.getBoundingClientRect(), s = Math.max(r.width, r.height), d = document.createElement('span');
+        d.className = 'ripple'; d.style.cssText = 'width:' + s + 'px;height:' + s + 'px;left:' + (e.clientX - r.left - s / 2) + 'px;top:' + (e.clientY - r.top - s / 2) + 'px';
+        b.appendChild(d); setTimeout(function () { d.remove(); }, 600); buzz(12);
+    });
+
+    function mark(t) { if (t.matches && t.matches('input:not([type=radio]), select')) t.classList.toggle('filled', t.value !== ''); }
+    document.addEventListener('input', function (e) { mark(e.target); });
+    document.addEventListener('change', function (e) { mark(e.target); });
+
+    function confetti() {
+        if (reduce) return;
+        var cols = ['#c79a3e', '#1f9d6b', '#14b8a6', '#e08a1e', '#4a90a6', '#d6455d'], f = document.createDocumentFragment(), list = [];
+        for (var i = 0; i < 28; i++) {
+            var c = document.createElement('i'); c.className = 'confetti';
+            c.style.cssText = 'left:' + Math.random() * 100 + 'vw;background:' + cols[i % cols.length] +
+                ';animation-duration:' + (1.8 + Math.random() * 1.4) + 's;animation-delay:' + Math.random() * .4 + 's;border-radius:' + (i % 3 ? '2px' : '50%');
+            f.appendChild(c); list.push(c);
+        }
+        document.body.appendChild(f);
+        setTimeout(function () { list.forEach(function (n) { n.remove(); }); }, 3800);
+        buzz([20, 40, 20]);
+    }
+    var hl = document.getElementById('headline'), res = document.getElementById('results');
+    if (hl) new MutationObserver(function () {
+        if (hl.classList.contains('ok') && res.classList.contains('show')) confetti();
+    }).observe(hl, { attributes: true, attributeFilter: ['class'] });
+})();
+</script>
+
+<script>
+/* مدة الخدمة: بالأشهر أو سنوات+أشهر — بدون إعادة كتابة ما يكتبه المستخدم أثناء الكتابة */
+(function () {
+    var $ = function (id) { return document.getElementById(id); };
+    var mon = $('svcMonths'), yr = $('svcYears'), xm = $('svcExtraMonths'), tot = $('svcTotal');
+    var wrap = $('svcMonthsWrap'), ym = $('svcYM'), MAX = 700, note = document.querySelector('.svc-note');
+    var NOTE = note ? note.textContent : '';
+    var syncing = false;
+
+    function num(v) { var n = parseInt(v, 10); return isNaN(n) ? NaN : n; }
+
+    function render() {
+        var m = num(mon.value), bad = !isNaN(m) && (m > MAX || m < 0);
+        if (isNaN(m)) { tot.classList.remove('show', 'warn'); if (note) { note.textContent = NOTE; note.classList.remove('warn'); } return; }
+        if (bad) {
+            tot.innerHTML = '<span class="t-label">القيمة خارج الحد المسموح</span><b>' + m + ' شهر</b><span class="t-eq">الحد الأقصى ' + MAX + ' شهر (' + Math.floor(MAX / 12) + ' سنة)</span>';
+            tot.classList.add('show', 'warn');
+            if (note) { note.textContent = 'أدخل قيمة بين 0 و ' + MAX + ' شهر.'; note.classList.add('warn'); }
+            return;
+        }
+        var y = Math.floor(m / 12), r = m % 12;
+        tot.innerHTML = '<span class="t-label">مجموع الخدمة المدخلة</span><b>' + m + ' شهر</b>' +
+            '<span class="t-eq">= ' + y + ' سنة و ' + r + ' شهر</span>';
+        tot.classList.remove('warn'); tot.classList.add('show');
+        if (note) { note.textContent = NOTE; note.classList.remove('warn'); }
+    }
+
+    /* يحسب إجمالي الأشهر من حقلي السنوات والأشهر دون تعديل قيمهما أثناء الكتابة */
+    function fromYM() {
+        if (syncing) return;
+        var y = num(yr.value), x = num(xm.value);
+        if (isNaN(y) && isNaN(x)) { mon.value = ''; }
+        else { mon.value = (isNaN(y) ? 0 : y) * 12 + (isNaN(x) ? 0 : x); }
+        syncing = true;
+        mon.dispatchEvent(new Event('input', { bubbles: true }));
+        syncing = false;
+        render();
+    }
+    /* التصحيح عند مغادرة الحقل فقط: الأشهر 0–11 تُحوَّل لسنوات، والإجمالي لا يتجاوز الحد */
+    function normalizeYM() {
+        var y = num(yr.value), x = num(xm.value);
+        if (isNaN(y) && isNaN(x)) return;
+        var total = Math.max(0, (isNaN(y) ? 0 : y) * 12 + (isNaN(x) ? 0 : x));
+        if (total > MAX) total = MAX;
+        var ny = Math.floor(total / 12), nx = total % 12;
+        yr.value = (ny === 0 && isNaN(y)) ? '' : ny; xm.value = (nx === 0 && isNaN(x)) ? '' : nx;
+        fromYM();
+    }
+    function normalizeMonths() {
+        var m = num(mon.value);
+        if (isNaN(m)) { mon.value = ''; render(); return; }
+        if (m < 0) m = 0; if (m > MAX) m = MAX;
+        mon.value = m; render();
+    }
+    function setMode(mode) {
+        document.querySelectorAll('.svc-tab').forEach(function (t) {
+            var on = t.dataset.mode === mode; t.classList.toggle('active', on); t.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+        wrap.hidden = mode === 'years'; ym.hidden = mode !== 'years';
+        if (mode === 'years') {
+            var m = num(mon.value);
+            if (!isNaN(m)) { m = Math.min(Math.max(m, 0), MAX); yr.value = Math.floor(m / 12); xm.value = m % 12; }
+            else { yr.value = ''; xm.value = ''; }
+        }
+        render();
+    }
+    document.querySelectorAll('.svc-tab').forEach(function (t) { t.addEventListener('click', function () { setMode(t.dataset.mode); }); });
+    yr.addEventListener('input', fromYM); xm.addEventListener('input', fromYM);
+    yr.addEventListener('blur', normalizeYM); xm.addEventListener('blur', normalizeYM);
+    mon.addEventListener('input', function () { if (!syncing) render(); });
+    mon.addEventListener('blur', normalizeMonths);
+    xm.max = 11; xm.placeholder = '0'; yr.max = Math.floor(MAX / 12);
+    if (note) { NOTE = 'خانة الأشهر من 0 إلى 11 (كل 12 شهر = سنة). أدخل المدة المسجلة لك في الضمان الاجتماعي.'; note.textContent = NOTE; }
+    $('resetBtn').addEventListener('click', function () {
+        setTimeout(function () { yr.value = ''; xm.value = ''; mon.value = ''; setMode('months'); render(); }, 0);
+    });
+    /* مسح الحقل من الأعلى (مثل تغيير الإجابة إلى «لا») يُحدّث العرض */
+    mon.addEventListener('input', function () { if (mon.value === '') { yr.value = ''; xm.value = ''; } });
+})();
+</script>
+
+<script>
+/* النصوص القانونية: تُبنى من نفس جداول المحرّك لضمان التطابق */
+(function () {
+    var box = document.querySelector('#legalModal .modal-body');
+    if (!box || typeof LawEngine === 'undefined') return;
+    var T = LawEngine.RETIRE_THRESHOLDS, cur = 'male';
+    var el29 = document.getElementById('lm29'), el33 = document.getElementById('lm33'), sw = box.querySelector('.lm-sw');
+
+    function render() {
+        var list = T[cur], rows = list.slice().reverse(), lastAge = list[list.length - 1].age;
+        box.classList.toggle('is-female', cur === 'female');
+        sw.classList.toggle('female', cur === 'female');
+        el29.innerHTML = rows.map(function (t) {
+            return '<div class="lm-row"><div class="lm-age">' + t.age + '<small>سنة</small></div><div class="lm-txt">عند بلوغ ' + t.age +
+                ' سنة مع خدمة مضمونة لا تقل عن <strong>' + t.years + ' سنة</strong></div></div>';
+        }).join('');
+        el33.innerHTML =
+            '<div class="lm-tr head"><span>السن</span><span>الخدمة المطلوبة</span><span>أقل خدمة فعلية</span></div>' +
+            rows.map(function (t) {
+                var rng = (t.age === lastAge) ? t.age + ' فأكثر' : (t.age === t.ageMax ? String(t.age) : t.age + ' – ' + t.ageMax);
+                return '<div class="lm-tr"><b>' + rng + '</b><span>' + t.years + ' سنة</span><span class="g">' + (t.minActual / 12) + ' سنة</span></div>';
+            }).join('');
+    }
+    box.querySelectorAll('.lm-sw-btn').forEach(function (b) {
+        b.setAttribute('aria-selected', b.classList.contains('active') ? 'true' : 'false');
+        b.addEventListener('click', function () {
+            cur = b.dataset.g;
+            box.querySelectorAll('.lm-sw-btn').forEach(function (x) {
+                var on = x === b; x.classList.toggle('active', on); x.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
+            render();
+        });
+    });
+    /* افتح تبويب الجنس الذي اختاره المستخدم في النموذج */
+    document.querySelectorAll('input[name="gender"]').forEach(function (r) {
+        r.addEventListener('change', function () {
+            var b = box.querySelector('.lm-sw-btn[data-g="' + r.value + '"]'); if (b) b.click();
+        });
+    });
+    render();
+})();
+</script>
+</body>
+</html>
