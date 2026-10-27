@@ -49,6 +49,7 @@
             color: var(--text-dark);
             line-height: 1.7;
             min-height: 100vh;
+            min-height: 100dvh;
             padding: 0 16px 40px;
             background-image: radial-gradient(circle at 10% 20%, rgba(74, 144, 166, 0.06) 0%, transparent 40%),
                 radial-gradient(circle at 90% 80%, rgba(199, 154, 62, 0.07) 0%, transparent 45%);
@@ -135,8 +136,6 @@
         /* ===== CARDS ===== */
         .card {
             background: var(--card-bg);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-soft);
             border: 1px solid rgba(255, 255, 255, 0.6);
@@ -721,8 +720,6 @@
             position: fixed;
             inset: 0;
             background: rgba(10, 25, 35, 0.55);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
             z-index: 600;
             display: none;
             align-items: flex-end;
@@ -745,6 +742,8 @@
             width: 100%;
             max-width: 720px;
             max-height: 88vh;
+            max-height: 88dvh;
+            overscroll-behavior: contain;
             overflow-y: auto;
             border-radius: 28px 28px 0 0;
             box-shadow: 0 -10px 50px rgba(0, 0, 0, 0.15);
@@ -1061,7 +1060,6 @@
                 radial-gradient(circle at 8% 12%, rgba(20,184,166,.14) 0%, transparent 38%),
                 radial-gradient(circle at 92% 18%, rgba(199,154,62,.16) 0%, transparent 40%),
                 radial-gradient(circle at 50% 95%, rgba(74,144,166,.14) 0%, transparent 45%);
-            background-attachment: fixed;
         }
         #scrollBar {
             position: fixed; top: 0; right: 0; height: 4px; width: 0; z-index: 99;
@@ -1200,7 +1198,7 @@
 
         /* ===== النصوص القانونية (المودال) ===== */
         .lm-sw { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: rgba(42,95,122,.08);
-            border-radius: 14px; margin-bottom: 16px; position: sticky; top: 0; z-index: 2; backdrop-filter: blur(6px); }
+            border-radius: 14px; margin-bottom: 16px; position: sticky; top: 8px; z-index: 2; background: #eef4f7; box-shadow: 0 0 0 8px #fff; }
         .lm-sw-btn { border: none; background: transparent; font-family: inherit; font-weight: 800; font-size: .88rem; color: var(--text-mid);
             padding: 10px; border-radius: 11px; cursor: pointer; transition: all .25s; }
         .lm-sw-btn.active { color: #fff; background: linear-gradient(135deg, var(--primary-mid), var(--primary-dark)); box-shadow: 0 6px 14px rgba(27,59,79,.28); }
@@ -1272,6 +1270,43 @@
         .lm-full .lm-text { padding: 4px 14px 14px; }
         .lm-src { font-size: .72rem; font-weight: 700; color: var(--text-light); margin-top: 6px; }
         .lm-stat + .lm-stat b { font-size: 1.6rem; color: var(--c-amber); }
+
+        /* ===== إصلاحات الأداء والتجربة (نسخة التحسين) ===== */
+        html { -webkit-text-size-adjust: 100%; }
+        body.modal-open { overflow: hidden; }
+        .card:hover { transform: none; }                       /* لا نحرّك بطاقات النموذج عند المرور */
+        .card, .plan-card, .headline-box { animation-duration: .35s; }
+        .plan-card { contain: layout paint; }
+        input, select { font-size: 16px; }                     /* يمنع تكبير iOS التلقائي عند التركيز */
+        input:focus, select:focus { transform: none; }
+        input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+        input[type=number]::-webkit-outer-spin-button, input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        :focus-visible { outline: 3px solid rgba(20,184,166,.55); outline-offset: 2px; }
+        .gender-opt:focus-within { border-color: var(--c-teal); box-shadow: 0 0 0 3px rgba(20,184,166,.2); }
+        .gender-opt.active { color: #fff; background: linear-gradient(145deg, var(--primary-mid), var(--primary-dark)); }
+        #genderFemaleLbl.active { background: linear-gradient(145deg, #c2476f, #9d2f58); border-color: #9d2f58; }
+        .svc-note.warn { color: #b03a2e; font-weight: 700; }
+        .svc-total.warn { border-color: rgba(214,69,93,.5); background: var(--c-red-bg); }
+        .svc-total.warn b { color: var(--c-red); }
+        .modal-box { display: flex; flex-direction: column; overflow: hidden; }
+        .modal-head { position: relative; flex-shrink: 0; z-index: 5; }
+        .modal-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+        .lm-sw { top: 0 !important; box-shadow: 0 -22px 0 0 #fff, 0 8px 0 0 #fff !important; }
+        .modal-close { flex-shrink: 0; width: 40px; height: 40px; }
+        .modal-body.lm { padding-top: 0; padding-bottom: calc(32px + env(safe-area-inset-bottom)); }
+        .lm-sw { margin-top: 0; border-radius: 0 0 14px 14px; }
+        .plan-row { gap: 12px; }
+        .plan-row b { text-align: left; }
+        .plan-card.best { transform: none; }
+        .toast-err { position: fixed; bottom: calc(20px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: #b03a2e; color: #fff;
+            padding: 12px 22px; border-radius: 12px; font-size: .85rem; font-weight: 700; z-index: 999; box-shadow: 0 6px 24px rgba(0,0,0,.2);
+            width: max-content; max-width: calc(100vw - 32px); text-align: center; transition: opacity .3s; }
+        @media (max-width: 500px) {
+            .app-header .app-title h1 { font-size: 1.12rem; }
+            .lm-tr { font-size: .76rem; } .lm-tr > * { padding: 9px 4px; }
+            .qc b { font-size: .95rem; }
+        }
+        @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .confetti { display: none; } }
     </style>
 </head>
 <body>
@@ -1552,6 +1587,16 @@
         /* ════════════════════════════════════════════════════════════
            BUSINESS LOGIC (نفس المحرك القانوني الأصلي)
            ════════════════════════════════════════════════════════════ */
+        /* نص المادة (29) لكل حالة — يُعرض في «السند القانوني» */
+        window.LAW_TEXT = {
+            male_15:   { n: 'أولاً',   text: 'إذا أكمل الرجل (63) الثالثة والستين من العمر وكانت له خدمة لا تقل عن (15) خمس عشرة سنة.' },
+            female_15: { n: 'ثانياً',  text: 'إذا أكملت المرأة (58) الثامنة والخمسين من العمر وكانت لها خدمة مضمونة لا تقل عن (15) خمس عشرة سنة.' },
+            male_20:   { n: 'ثالثاً',  text: 'إذا أكمل الرجل (60) الستين من العمر وكانت له خدمة مضمونة لا تقل عن (20) عشرين سنة.' },
+            female_20: { n: 'رابعاً',  text: 'إذا أكملت المرأة (55) خمسة وخمسين من العمر وكانت لها خدمة مضمونة لا تقل عن (20) عشرين سنة.' },
+            male_30:   { n: 'خامساً',  text: 'إذا أكمل الرجل (50) الخمسين من العمر وكانت له خدمة مضمونة لا تقل عن (30) ثلاثين سنة.' },
+            female_25: { n: 'سادساً',  text: 'إذا أكملت المرأة (50) الخمسين من العمر وكانت لها خدمة مضمونة لا تقل عن (25) خمسة وعشرين سنة.' }
+        };
+
         const LawEngine = (function() {
 
             /*
@@ -1723,15 +1768,27 @@
         (function() {
 
             // ---- مودالات ----
-            function openModal(id) { document.getElementById(id).classList.add('show'); }
-
-            function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+            let lastFocus = null;
+            function openModal(id) {
+                lastFocus = document.activeElement;
+                const m = document.getElementById(id);
+                m.classList.add('show'); document.body.classList.add('modal-open');
+                const box = m.querySelector('.modal-body'); if (box) box.scrollTop = 0;
+                const c = m.querySelector('.modal-close'); if (c) c.focus({ preventScroll: true });
+            }
+            function closeModal(id) {
+                document.getElementById(id).classList.remove('show');
+                if (!document.querySelector('.modal-overlay.show')) document.body.classList.remove('modal-open');
+                if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+            }
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.show').forEach(o => closeModal(o.id));
+            });
             document.getElementById('legalBtn').onclick = () => openModal('legalModal');
             document.getElementById('legalBtn2').onclick = () => openModal('legalModal');
             document.getElementById('svcHelpBtn').onclick = () => openModal('helpModal');
             document.querySelectorAll('.modal-close').forEach(b => b.onclick = () => closeModal(b.dataset.close));
-            document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e
-                        .target === o) o.classList.remove('show'); }));
+            document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) closeModal(o.id); }));
 
             // ---- تعبئة حقول التاريخ ----
             const dDay = document.getElementById('bDay'),
@@ -1831,6 +1888,7 @@
                 document.getElementById('results').classList.remove('show');
                 if (p === 'no') {
                     svcInput.value = '';
+                    svcInput.dispatchEvent(new Event('input', { bubbles: true }));
                     svcHint.classList.remove('show');
                     checkAgeWarning();
                 }
@@ -1874,8 +1932,8 @@
                 if (!el) {
                     el = document.createElement('div');
                     el.id = 'fieldError';
-                    el.style.cssText =
-                        'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#b03a2e;color:#fff;padding:12px 24px;border-radius:12px;font-size:0.85rem;font-weight:700;z-index:999;box-shadow:0 6px 24px rgba(0,0,0,0.2);max-width:340px;text-align:center;direction:rtl;font-family:inherit;';
+                    el.className = 'toast-err';
+                    el.setAttribute('role', 'alert');
                     document.body.appendChild(el);
                 }
                 el.textContent = msg;
@@ -1900,12 +1958,12 @@
                     showFieldError('يرجى تحديد الجنس (ذكر أو أنثى).');
                     return false;
                 }
-                if (path === 'yes' && (svcInput.value === '' || +svcInput.value < 0)) {
+                if (path === 'yes' && (svcInput.value === '' || !(+svcInput.value >= 0) || +svcInput.value > 700)) {
                     svcInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    showFieldError('يرجى إدخال عدد أشهر الخدمة المضمونة (مثال: 240).');
+                    showFieldError('يرجى إدخال مدة خدمة صحيحة (من 0 إلى 700 شهر، مثال: 240).');
                     return false;
                 }
-                if (path === 'no' && needsServiceForNo && (svcInput.value === '' || +svcInput.value < 0)) {
+                if (path === 'no' && needsServiceForNo && (svcInput.value === '' || !(+svcInput.value >= 0) || +svcInput.value > 700)) {
                     svcInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     showFieldError('بما أن عمرك 50 سنة أو أكثر وغير مشترك حالياً، يرجى إدخال عدد أشهر الخدمة السابقة لإتمام الاحتساب.');
                     return false;
@@ -1932,6 +1990,7 @@
                 dYear.value = '';
                 refreshDays();
                 svcInput.value = '';
+                svcInput.dispatchEvent(new Event('input', { bubbles: true }));
                 svcHint.classList.remove('show');
                 document.getElementById('results').classList.remove('show');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2056,91 +2115,4 @@
                             ${(!p.expired) ? `<div class="plan-row"><span>خدمتك المتوقعة عند هذا السن</span><b>${LawEngine.formatYM(p.projectedService)}</b></div>` : ''}
                             ${statusHtml}${extraHtml}
                         </div>
-                    </div>`;
-                }).join('');
-
-                document.getElementById('results').classList.add('show');
-                document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-
-            // ---- زر الحساب ----
-            document.getElementById('calcBtn').onclick = () => {
-                if (!validateForm()) return;
-                const birthDate = new Date(+dYear.value, +dMonth.value - 1, +dDay.value);
-                const today = new Date();
-                const usesEnteredService = (path === 'yes') || (path === 'no' && needsServiceForNo && svcInput.value !== '');
-                const currentServiceMonths = usesEnteredService ? +svcInput.value : 0;
-                const result = LawEngine.evaluate({ birthDate, gender, currentServiceMonths, today });
-                renderResults(result, usesEnteredService);
-            };
-
-        })();
-    </script>
-
-<script>
-/* تحسينات التفاعل */
-(function () {
-    var bar = document.createElement('div'); bar.id = 'scrollBar'; document.body.appendChild(bar);
-    addEventListener('scroll', function () {
-        var h = document.documentElement.scrollHeight - innerHeight;
-        bar.style.width = (h > 0 ? scrollY / h * 100 : 0) + '%';
-    }, { passive: true });
-
-    function buzz(ms) { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} }
-
-    document.addEventListener('click', function (e) {
-        var b = e.target.closest('.btn-primary, .gate-btn'); if (!b) return;
-        var r = b.getBoundingClientRect(), s = Math.max(r.width, r.height), d = document.createElement('span');
-        d.className = 'ripple'; d.style.cssText = 'width:' + s + 'px;height:' + s + 'px;left:' + (e.clientX - r.left - s / 2) + 'px;top:' + (e.clientY - r.top - s / 2) + 'px';
-        b.appendChild(d); setTimeout(function () { d.remove(); }, 600); buzz(12);
-    });
-
-    document.addEventListener('input', function (e) {
-        var t = e.target; if (t.matches && t.matches('input:not([type=radio]), select')) t.classList.toggle('filled', t.value !== '');
-    });
-    document.addEventListener('change', function (e) {
-        var t = e.target; if (t.matches && t.matches('select')) t.classList.toggle('filled', t.value !== '');
-    });
-
-    function confetti() {
-        var cols = ['#c79a3e', '#1f9d6b', '#14b8a6', '#e08a1e', '#4a90a6', '#d6455d'];
-        for (var i = 0; i < 60; i++) {
-            var c = document.createElement('i'); c.className = 'confetti';
-            c.style.cssText = 'left:' + Math.random() * 100 + 'vw;background:' + cols[i % cols.length] +
-                ';animation-duration:' + (1.8 + Math.random() * 1.6) + 's;animation-delay:' + Math.random() * .5 + 's;border-radius:' + (i % 3 ? '2px' : '50%');
-            document.body.appendChild(c); setTimeout(function (n) { n.remove(); }, 4200, c);
-        }
-        buzz([20, 40, 20]);
-    }
-    var hl = document.getElementById('headline');
-    if (hl) new MutationObserver(function () {
-        if (hl.classList.contains('ok') && document.getElementById('results').classList.contains('show')) confetti();
-    }).observe(hl, { attributes: true, attributeFilter: ['class'] });
-})();
-</script>
-
-<script>
-/* مدة الخدمة: بالأشهر أو سنوات+أشهر */
-(function () {
-    var $ = function (id) { return document.getElementById(id); };
-    var mon = $('svcMonths'), yr = $('svcYears'), xm = $('svcExtraMonths'), tot = $('svcTotal');
-    var wrap = $('svcMonthsWrap'), ym = $('svcYM'), MAX = 700;
-
-    function render() {
-        if (mon.value === '' || isNaN(+mon.value)) { tot.classList.remove('show'); return; }
-        var m = +mon.value, y = Math.floor(m / 12), r = m % 12;
-        tot.innerHTML = '<span class="t-label">مجموع الخدمة المدخلة</span><b>' + m + ' شهر</b>' +
-            '<span class="t-eq">= ' + y + ' سنة و ' + r + ' شهر</span>';
-        tot.classList.add('show');
-    }
-    function fromYM() {
-        if (yr.value === '' && xm.value === '') { mon.value = ''; }
-        else {
-            var y = Math.max(0, parseInt(yr.value || 0, 10)), x = Math.max(0, parseInt(xm.value || 0, 10));
-            if (x > 12) x = 12;                                   /* الأشهر لا تتجاوز 12 */
-            if (y * 12 + x > MAX) { y = Math.floor(MAX / 12); x = Math.min(x, 12); if (y * 12 + x > MAX) x = MAX - y * 12; }
-            if (xm.value !== '') xm.value = x;
-            if (yr.value !== '') yr.value = y;
-            mon.value = y * 12 + x;
-        }
-        mon.dispatchEvent(new Event('inpu
+              
